@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline';" />
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden;
+      font-family: "Segoe UI", system-ui, sans-serif; -webkit-user-select: none; }
+    #bar { height: 100%; display: flex; align-items: center; gap: 10px; padding: 0 16px;
+      box-sizing: border-box; border-radius: 16px; color: #fff;
+      background: rgba(20,20,28,0.92); box-shadow: 0 6px 24px rgba(0,0,0,0.35); }
+    #dot { width: 12px; height: 12px; border-radius: 50%; background: #6b7280; flex: 0 0 auto; }
+    #bar.listening #dot { background: #ef4444; animation: pulse 1s infinite; }
+    #bar.listening.handsfree #dot { background: #22c55e; } /* hands-free: green, still pulsing */
+    #bar.finalizing #dot { background: #f59e0b; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+    #label { font-size: 13px; opacity: 0.9; flex: 0 0 auto; }
+    #text { font-size: 13px; opacity: 0.95; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; }
+  </style>
+</head>
+<body>
+  <div id="bar">
+    <div id="dot"></div>
+    <div id="label">Idle</div>
+    <div id="text"></div>
+  </div>
+  <script src="recorder.js"></script>
+</body>
+</html>

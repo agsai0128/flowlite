@@ -1,0 +1,88 @@
+{
+  "name": "flowlite",
+  "productName": "FlowLite",
+  "version": "0.1.0",
+  "description": "Original push-to-talk dictation app: hotkey -> speak -> clean text at your cursor",
+  "author": "FlowLite",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/main/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
+    "start": "npm run build && electron .",
+    "icons": "node scripts/make-icon.mjs",
+    "dist": "npm run icons && npm run build && electron-builder --win nsis --x64 --publish never",
+    "test:pipeline": "npm run build && node dist/test/pipeline.test.js",
+    "test:format": "npm run build && node dist/test/format.test.js",
+    "test:vocab": "npm run build && node dist/test/vocab.test.js",
+    "test:asr": "npm run build && node dist/test/asr.test.js",
+    "test:context": "npm run build && node dist/test/context.test.js",
+    "test:startup": "npm run build && node dist/test/startup.test.js",
+    "test:hotkey": "npm run build && node dist/test/hotkey.test.js",
+    "test:session": "npm run build && node dist/test/session.test.js",
+    "test": "npm run build && node dist/test/format.test.js && node dist/test/vocab.test.js && node dist/test/asr.test.js && node dist/test/context.test.js && node dist/test/startup.test.js && node dist/test/hotkey.test.js && node dist/test/session.test.js && node dist/test/pipeline.test.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.5.12",
+    "electron": "^42.0.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "^5.6.0"
+  },
+  "build": {
+    "appId": "com.flowlite.dictation",
+    "productName": "FlowLite",
+    "copyright": "Copyright © 2026 FlowLite",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "!dist/test/**",
+      "!**/*.map",
+      "!**/*.d.ts",
+      "!**/*.d.mts",
+      "!**/*.d.cts",
+      "!**/node_modules/@anthropic-ai/sdk/src/**",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "helper",
+        "to": "helper"
+      }
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FlowLite",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "include": "build/installer.nsh",
+      "artifactName": "FlowLite-Setup-${version}.exe"
+    }
+  }
+}

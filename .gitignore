@@ -1,0 +1,20 @@
+# Out of scope for this repository
+/work/
+/rea/
+/.scratch/
+/WISPR-FLOW-REPORT.md
+/CLAUDE.md
+/docs/agents/
+
+# Dependencies, build output, local artifacts
+node_modules/
+dist/
+release/
+*.log
+settings.json
+.env
+.env.*
+
+# OS / editor
+Thumbs.db
+.DS_Store
