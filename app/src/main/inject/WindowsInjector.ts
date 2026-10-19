@@ -36,9 +36,14 @@ export class WindowsInjector implements TextInjector {
     const cb = this.opts.clipboard ?? electronClipboard();
     const previous = cb.readText();
     cb.writeText(text);
-    await this.opts.pen.press();
-    const delay = this.opts.restoreDelayMs ?? 100;
-    await new Promise((r) => setTimeout(r, delay));
-    cb.writeText(previous);
+    try {
+      await this.opts.pen.press();
+    } finally {
+      // Always restore the clipboard, even if the keystroke failed, so a pen error
+      // can never leave the dictated text sitting on the user's clipboard.
+      const delay = this.opts.restoreDelayMs ?? 100;
+      await new Promise((r) => setTimeout(r, delay));
+      cb.writeText(previous);
+    }
   }
 }

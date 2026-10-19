@@ -20,7 +20,8 @@
     "test:startup": "npm run build && node dist/test/startup.test.js",
     "test:hotkey": "npm run build && node dist/test/hotkey.test.js",
     "test:session": "npm run build && node dist/test/session.test.js",
-    "test": "npm run build && node dist/test/format.test.js && node dist/test/vocab.test.js && node dist/test/asr.test.js && node dist/test/context.test.js && node dist/test/startup.test.js && node dist/test/hotkey.test.js && node dist/test/session.test.js && node dist/test/pipeline.test.js",
+    "test:inject": "npm run build && node dist/test/inject.test.js",
+    "test": "npm run build && node dist/test/format.test.js && node dist/test/vocab.test.js && node dist/test/asr.test.js && node dist/test/context.test.js && node dist/test/startup.test.js && node dist/test/hotkey.test.js && node dist/test/session.test.js && node dist/test/inject.test.js && node dist/test/pipeline.test.js",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
