@@ -30,8 +30,8 @@ async function main() {
     focus: { precedingText: 'I was saying' },
   });
 
-  // Dry-run inserter works without Electron.
-  const injector = new WindowsInjector({ dryRun: true, appRoot: process.cwd() });
+  // Dry-run inserter works without Electron (the pen is never pressed in dry-run).
+  const injector = new WindowsInjector({ dryRun: true, pen: { press: async () => {} } });
   await injector.insertAtCursor(text);
 
   console.log(`partials observed: ${partials.length}`);
