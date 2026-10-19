@@ -8,7 +8,7 @@ import { HIDDEN_ARG, hotkeyLabel, readState, shouldEnableLoginItemOnFirstRun, wr
 import { createTray, setLoginItem } from './tray';
 import { loadConfig, type Config } from './config';
 import { createEngine } from './asr';
-import { createInjector } from './inject';
+import { createInjector, OneShotPastePen, PasteHelper } from './inject';
 import { createFormatter } from './format';
 import { processTranscript } from './pipeline';
 import { createContextProvider } from './context';
@@ -34,6 +34,7 @@ let cfg: Config;
 let win: BrowserWindow | null = null;
 let session: DictationSession | null = null;
 let keyHook: KeyHookSource | null = null;
+let pasteHelper: PasteHelper | null = null;
 let holdAvailable = false;
 
 function createWindow() {
@@ -134,7 +135,13 @@ app.whenReady().then(() => {
 
   cfg = loadConfig(userData);
   const engine = createEngine(cfg);
-  const injector = createInjector(cfg, HELPER_ROOT);
+  // Keep one paste helper warm so inserts don't pay a PowerShell cold-start; it falls
+  // back to a one-shot spawn when down. Not needed in dry-run (nothing is pasted).
+  if (process.platform === 'win32' && !cfg.dryRunInject) {
+    pasteHelper = new PasteHelper({ helperRoot: HELPER_ROOT, fallback: new OneShotPastePen(HELPER_ROOT), log: (m) => console.log('[flowlite]', m) });
+    pasteHelper.start();
+  }
+  const injector = createInjector(cfg, HELPER_ROOT, pasteHelper ?? undefined);
   const formatter = createFormatter(cfg);
   const contextProvider = createContextProvider(cfg, HELPER_ROOT);
   // The session speaks to Electron only through this view (window + renderer + tray).
@@ -148,7 +155,7 @@ app.whenReady().then(() => {
   console.log(`[flowlite] vocabulary: ${cfg.dictionary.length} dictionary terms, ${cfg.replacements.length} replacements`);
   console.log(`[flowlite] settings file: ${join(userData, 'settings.json')}`);
   const helperDir = join(HELPER_ROOT, 'helper', 'win');
-  const helpersFound = ['paste.ps1', 'context.ps1'].every((f) => existsSync(join(helperDir, f)));
+  const helpersFound = ['paste.ps1', 'paste-helper.ps1', 'context.ps1'].every((f) => existsSync(join(helperDir, f)));
   console.log(`[flowlite] helpers: ${helperDir} (${helpersFound ? 'found' : 'MISSING'})`);
 
   createWindow();
@@ -192,7 +199,7 @@ app.whenReady().then(() => {
   }
 });
 
-app.on('will-quit', () => { globalShortcut.unregisterAll(); keyHook?.stop(); });
+app.on('will-quit', () => { globalShortcut.unregisterAll(); keyHook?.stop(); pasteHelper?.stop(); });
 // Keep running with no visible window (tray/background-style app): by subscribing
 // and not calling app.quit(), the app stays alive when the hidden window closes.
 app.on('window-all-closed', () => { /* keep running in background */ });
