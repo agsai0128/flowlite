@@ -86,6 +86,7 @@ export class PasteHelper implements PastePen {
   private scheduleRestart(): void {
     const delay = nextPasteBackoff(this.attempt++);
     if (delay === null) { this.opts.log?.('paste-helper: unavailable; using one-shot fallback until next launch'); return; }
+    this.opts.log?.(`paste-helper: retrying in ${delay} ms`);
     this.restartTimer = setTimeout(() => this.spawnOnce(), delay);
   }
 
@@ -103,7 +104,14 @@ export class PasteHelper implements PastePen {
       return this.opts.fallback.press();
     }
     return new Promise<void>((resolve) => {
-      const timer = setTimeout(() => { this.pending = null; resolve(); }, this.opts.ackTimeoutMs ?? ACK_TIMEOUT_MS);
+      const timer = setTimeout(() => {
+        // No ack within the window: the warm helper is hung but alive, so the paste
+        // may never have been sent. Fall back to a one-shot spawn rather than report
+        // success — otherwise the dictated text would be silently dropped.
+        this.pending = null;
+        this.opts.log?.('paste-helper: no ack; falling back to one-shot');
+        this.opts.fallback.press().then(resolve, resolve);
+      }, this.opts.ackTimeoutMs ?? ACK_TIMEOUT_MS);
       this.pending = { resolve, timer };
       this.child!.stdin!.write('paste\n');
     });

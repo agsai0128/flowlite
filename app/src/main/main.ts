@@ -155,7 +155,7 @@ app.whenReady().then(() => {
   console.log(`[flowlite] vocabulary: ${cfg.dictionary.length} dictionary terms, ${cfg.replacements.length} replacements`);
   console.log(`[flowlite] settings file: ${join(userData, 'settings.json')}`);
   const helperDir = join(HELPER_ROOT, 'helper', 'win');
-  const helpersFound = ['paste.ps1', 'paste-helper.ps1', 'context.ps1', 'keyhook.ps1'].every((f) => existsSync(join(helperDir, f)));
+  const helpersFound = ['paste.ps1', 'paste-helper.ps1', 'context.ps1'].every((f) => existsSync(join(helperDir, f)));
   console.log(`[flowlite] helpers: ${helperDir} (${helpersFound ? 'found' : 'MISSING'})`);
 
   createWindow();

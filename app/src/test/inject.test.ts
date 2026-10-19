@@ -4,7 +4,7 @@
 // desktop, clipboard, or PowerShell is touched.
 import { EventEmitter } from 'node:events';
 import { WindowsInjector } from '../main/inject/WindowsInjector';
-import { PasteHelper, nextPasteBackoff, parsePasteLine } from '../main/inject';
+import { PasteHelper, OneShotPastePen, nextPasteBackoff, parsePasteLine } from '../main/inject';
 import type { Clipboard, PastePen } from '../main/inject';
 
 let failures = 0;
@@ -123,6 +123,32 @@ async function main() {
     await helper.press();           // now not ready -> fallback
     ok('I8b next press falls back', fellBack === 1);
     helper.stop();
+  }
+
+  // I9 PasteHelper: warm but no ack within the window -> falls back (never silently drops)
+  {
+    let fellBack = 0;
+    const fallback: PastePen = { press: async () => { fellBack++; } };
+    const child = new FakeChild();
+    const helper = new PasteHelper({ helperRoot: '.', fallback, spawnHelper: () => child as never, ackTimeoutMs: 10 });
+    helper.start();
+    child.line('ready');
+    await helper.press();           // write 'paste', no 'ok' arrives -> timeout -> fallback
+    ok('I9a no-ack falls back to one-shot', fellBack === 1);
+    ok('I9b paste command was still sent', child.stdin.writes.join('') === 'paste\n');
+    helper.stop();
+  }
+
+  // I10 OneShotPastePen: spawns the one-shot script and resolves when it closes
+  {
+    const child = new FakeChild();
+    let spawnedScript = '';
+    const pen = new OneShotPastePen('ROOT', (script) => { spawnedScript = script; return child as never; });
+    const p = pen.press();
+    ok('I10a spawned the paste script', /paste\.ps1$/.test(spawnedScript.replace(/\\/g, '/')));
+    child.emit('close');
+    await p;
+    ok('I10b resolves on process close', true);
   }
 
   if (failures) { console.error(`\n${failures} inject test(s) failed`); process.exit(1); }
